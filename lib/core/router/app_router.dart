@@ -1,10 +1,10 @@
+// lib/core/router/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:Potato/features/homepage/homepage.dart';
 import 'package:Potato/features/video_search/video_search_page.dart';
 import 'package:Potato/features/video_search/video_detail_page.dart';
 import 'package:Potato/navigation/main_navigation.dart';
-
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -21,13 +21,27 @@ class AppRouter {
         ),
         routes: [
           GoRoute(
-            path: 'video_detail/:link',
+            path: 'video_search',
+            name: 'VideoSearch',
+            pageBuilder: (context, state) => MaterialPage(
+              child: VideoSearchPage(query: state.extra as String), // 传递 query 参数
+            ),
+          ),
+          GoRoute(
+            path: 'video_detail:link',
             name: 'VideoDetail',
             builder: (context, state) {
-              final link = state.pathParameters['link']!; // 使用 pathParameters
+              final link = state.pathParameters['link']!;
               return VideoDetailPage(link: link);
             },
           ),
+          GoRoute(
+            path: 'search',
+            builder: (context, state) {
+              final query = state.extra as String;
+              return VideoSearchPage(query: query);
+            },
+        ),
         ],
       ),
     ],

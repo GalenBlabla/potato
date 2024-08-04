@@ -128,4 +128,25 @@ class VideoApiService {
       throw Exception('Failed to load recommended videos');
     }
   }
+    // 获取公告信息
+  Future<List<Map<String, dynamic>>> fetchAnnouncements() async {
+    final cacheKey = 'announcements';
+    final cachedData = _cacheManager.get(cacheKey);
+
+    if (cachedData != null) {
+      return List<Map<String, dynamic>>.from(cachedData);
+    }
+
+    final url = Uri.parse('$baseUrl/api/home/announcements');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = utf8.decode(response.bodyBytes);
+      final result = List<Map<String, dynamic>>.from(json.decode(data));
+      _cacheManager.set(cacheKey, result); // 缓存数据
+      return result;
+    } else {
+      throw Exception('Failed to load announcements');
+    }
+  }
 }

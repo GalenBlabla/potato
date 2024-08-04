@@ -4,8 +4,42 @@ import 'package:provider/provider.dart';
 import 'package:Potato/core/state/video_state.dart';
 import 'package:go_router/go_router.dart';
 
-class VideoSearchPage extends StatelessWidget {
-  const VideoSearchPage({super.key});
+class VideoSearchPage extends StatefulWidget {
+  final String query;
+
+  const VideoSearchPage({required this.query, super.key});
+
+  @override
+  _VideoSearchPageState createState() => _VideoSearchPageState();
+}
+
+class _VideoSearchPageState extends State<VideoSearchPage> {
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController(text: widget.query);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final videoState = Provider.of<VideoState>(context, listen: false);
+      videoState.searchVideos(widget.query); // 执行搜索
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchSubmitted() {
+    final query = _searchController.text;
+    if (query.isNotEmpty) {
+      final videoState = Provider.of<VideoState>(context, listen: false);
+      videoState.searchVideos(query);
+      context.go('/search', extra: query); // 更新路由中的query参数
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,54 +47,44 @@ class VideoSearchPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1.0,
         centerTitle: true,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.favorite, color: Colors.white),
-            const SizedBox(width: 10),
-            Text(
-              'Anime-Style',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    offset: Offset(2.0, 2.0),
-                    blurRadius: 3.0,
-                    color: Colors.black.withOpacity(0.5),
+        iconTheme: const IconThemeData(color: Colors.grey), // 设置返回按钮颜色
+        title: Container(
+          height: 40,
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: '搜索...',
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
-                ],
+                  onSubmitted: (_) => _onSearchSubmitted(),
+                ),
               ),
-            ),
-          ],
+              TextButton(
+                onPressed: _onSearchSubmitted,
+                child: const Text(
+                  '搜索',
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              child: TextField(
-                onSubmitted: (query) {
-                  videoState.searchVideos(query);
-                },
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.secondary),
-                  hintText: 'Search for anime...',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(15.0),
-                  ),
-                  contentPadding: const EdgeInsets.all(15.0),
-                ),
-              ),
-            ),
-          ),
           Expanded(
             child: videoState.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -78,7 +102,7 @@ class VideoSearchPage extends StatelessWidget {
                               ),
                               child: InkWell(
                                 onTap: () {
-                                  context.go('/video_detail/${result['link']}');
+                                  context.pushNamed('VideoDetail', pathParameters: {'link': result['link']!});
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),

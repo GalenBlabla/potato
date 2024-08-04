@@ -13,6 +13,7 @@ Future<void> bootstrap() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => VideoState()),
+        ChangeNotifierProvider(create: (_) => VideoState()..fetchAnnouncements()),
       ],
       child: const App(),
     ),

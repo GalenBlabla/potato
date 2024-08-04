@@ -10,6 +10,7 @@ class App extends StatelessWidget {
     return MaterialApp.router(
       title: 'Anime-Style',
       theme: AppTheme.lightTheme,
+      debugShowCheckedModeBanner: false, // 关闭 debug 横幅
       routerDelegate: AppRouter.router.routerDelegate,
       routeInformationParser: AppRouter.router.routeInformationParser,
       routeInformationProvider: AppRouter.router.routeInformationProvider,

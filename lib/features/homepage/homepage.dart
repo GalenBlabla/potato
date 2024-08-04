@@ -1,7 +1,8 @@
-// features/homepage/homepage.dart
+// lib/features/homepage/homepage.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/state/video_state.dart';
 import 'components/carousel_section.dart';
 import 'components/recommended_section.dart';
@@ -18,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   late PageController _pageController;
   int _currentPage = 0;
   late Timer _timer;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _pageController.dispose();
     _timer.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -59,6 +62,13 @@ class _HomePageState extends State<HomePage> {
     await _fetchData();
   }
 
+  void _onSearchSubmitted(String query) {
+    if (query.isNotEmpty) {
+      // 跳转到 VideoSearchPage，并在那边进行搜索
+      context.go('/search', extra: query);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +84,7 @@ class _HomePageState extends State<HomePage> {
         title: Container(
           height: 40,
           child: TextField(
+            controller: _searchController,
             decoration: InputDecoration(
               hintText: '搜索...',
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
@@ -85,6 +96,7 @@ class _HomePageState extends State<HomePage> {
                 borderSide: BorderSide.none,
               ),
             ),
+            onSubmitted: _onSearchSubmitted,
           ),
         ),
         actions: [
