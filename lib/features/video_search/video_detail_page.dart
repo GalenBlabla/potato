@@ -1,9 +1,7 @@
-// lib/features/video_search/video_detail_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:better_player/better_player.dart';
-import 'package:flutter/services.dart'; // 新增的导入
+import 'package:flutter/services.dart';
 import 'package:Potato/core/state/video_state.dart';
 
 class VideoDetailPage extends StatefulWidget {
@@ -24,21 +22,89 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     // 设置状态栏样式
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.black, // 设置状态栏背景色为黑色
-        statusBarIconBrightness: Brightness.light, // 状态栏图标颜色为白色
+        statusBarColor: Colors.black,
+        statusBarIconBrightness: Brightness.light,
       ),
     );
 
+    // 初始化播放器
+    _initializePlayer();
+  }
+
+  Future<void> _initializePlayer() async {
     final videoState = Provider.of<VideoState>(context, listen: false);
-    videoState.fetchVideoInfo(widget.link).then((_) {
-      // 自动播放第一集
-      videoState.playEpisodeAtIndex(0);
-    });
+    await videoState.fetchVideoInfo(widget.link);
+    // 清空之前的播放器控制器
+    videoState.setBetterPlayerController(null);
+    _playEpisodeAtIndex(0); // 自动播放第一集
+  }
+  Future<void> _playEpisodeAtIndex(int index) async {
+    final videoState = Provider.of<VideoState>(context, listen: false);
+    if (videoState.videoInfo == null || videoState.videoInfo!['episodes'] == null) return;
+
+    final episodes = videoState.videoInfo!['episodes'];
+    if (index >= episodes.entries.length) return;
+
+    final entry = episodes.entries.toList()[index];
+    final episode = entry.value[0];
+    final url = episode['url'];
+
+    _playEpisode(url);
+  }
+
+  Future<void> _playEpisode(String url) async {
+    final videoState = Provider.of<VideoState>(context, listen: false);
+
+    // 释放之前的播放器
+    _betterPlayerController?.pause();
+    _betterPlayerController?.dispose();
+
+    // 播放新视频
+    final videoSource = await videoState.getEpisodeInfo(url);
+    final decryptedUrl = await videoState.getDecryptedUrl(videoSource);
+    final betterPlayerDataSource = BetterPlayerDataSource(
+      BetterPlayerDataSourceType.network,
+      decryptedUrl,
+    );
+
+    _betterPlayerController = BetterPlayerController(
+      BetterPlayerConfiguration(
+        autoPlay: true,
+        aspectRatio: 16 / 9,
+        eventListener: (event) {
+          if (event.betterPlayerEventType == BetterPlayerEventType.finished) {
+            _playNextEpisode();
+          }
+        },
+      ),
+      betterPlayerDataSource: betterPlayerDataSource,
+    );
+
+    // 设置播放器控制器到 VideoState
+    videoState.setBetterPlayerController(_betterPlayerController);
+  }
+
+  void _playNextEpisode() {
+    final videoState = Provider.of<VideoState>(context, listen: false);
+    if (videoState.videoInfo == null || videoState.videoInfo!['episodes'] == null) return;
+
+    final episodes = videoState.videoInfo!['episodes'];
+    if (videoState.currentEpisodeIndex + 1 >= episodes.entries.length) return;
+
+    final nextIndex = videoState.currentEpisodeIndex + 1;
+    _playEpisodeAtIndex(nextIndex);
   }
 
   @override
   void dispose() {
+    // 释放播放器资源
+    _betterPlayerController?.pause();
     _betterPlayerController?.dispose();
+
+    // 清空播放器控制器
+    final videoState = Provider.of<VideoState>(context, listen: false);
+    videoState.setBetterPlayerController(null);
+
     // 重置状态栏样式
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     super.dispose();
@@ -94,7 +160,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                                 ),
                               ),
                               Text(
-                                '正在播放${videoState.currentEpisodeIndex + 1}',
+                                '正在播放第 ${videoState.currentEpisodeIndex + 1} 集',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -135,7 +201,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                                         title: Text(episode['name'] ?? ''),
                                         trailing: const Icon(Icons.play_circle_fill, color: Colors.deepPurple),
                                         onTap: () {
-                                          videoState.playEpisode(episode['url']);
+                                          _playEpisode(episode['url']);
                                         },
                                       ),
                                     );

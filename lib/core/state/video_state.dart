@@ -95,19 +95,32 @@ class VideoState extends ChangeNotifier {
     _isSearching = value;
     notifyListeners();
   }
+  // 获取指定集的详细信息
+  Future<String> getEpisodeInfo(String episodeUrl) async {
+    // 调用 API 服务获取视频源信息
+    return await _videoApiService.getEpisodeInfo(episodeUrl);
+  }
 
+  // 解密视频 URL
+  Future<String> getDecryptedUrl(String videoSource) async {
+    // 调用 API 服务获取解密后的 URL
+    return await _videoApiService.getDecryptedUrl(videoSource);
+  }
+  // 播放指定的集
   Future<void> playEpisode(String episodeUrl) async {
     try {
-      final videoSource = await _videoApiService.getEpisodeInfo(episodeUrl);
-      final decryptedUrl = await _videoApiService.getDecryptedUrl(videoSource);
+      final videoSource = await getEpisodeInfo(episodeUrl);
+      final decryptedUrl = await getDecryptedUrl(videoSource);
 
       final betterPlayerDataSource = BetterPlayerDataSource(
         BetterPlayerDataSourceType.network,
         decryptedUrl,
       );
 
+      // 释放之前的播放器
       _betterPlayerController?.dispose();
 
+      // 初始化新的播放器控制器
       _betterPlayerController = BetterPlayerController(
         BetterPlayerConfiguration(
           autoPlay: true,
@@ -126,6 +139,12 @@ class VideoState extends ChangeNotifier {
     } catch (e) {
       print('Error: $e');
     }
+  }
+
+  // 设置 BetterPlayerController
+  void setBetterPlayerController(BetterPlayerController? controller) {
+    _betterPlayerController = controller;
+    notifyListeners();
   }
 
   Future<void> playEpisodeAtIndex(int index) async {
