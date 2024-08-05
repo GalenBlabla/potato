@@ -26,7 +26,11 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _pageController = PageController(initialPage: _currentPage);
     _startAutoScroll();
-    _fetchData();
+    // 使用 addPostFrameCallback 在当前帧结束后调用
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
+    
   }
 
   @override

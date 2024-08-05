@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:better_player/better_player.dart';
 import 'package:flutter/services.dart';
 import 'package:Potato/core/state/video_state.dart';
+import 'package:Potato/features/video_search/components/custom_controls.dart';
 
 class VideoDetailPage extends StatefulWidget {
   final String link;
@@ -38,6 +39,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     videoState.setBetterPlayerController(null);
     _playEpisodeAtIndex(0); // 自动播放第一集
   }
+
   Future<void> _playEpisodeAtIndex(int index) async {
     final videoState = Provider.of<VideoState>(context, listen: false);
     if (videoState.videoInfo == null || videoState.videoInfo!['episodes'] == null) return;
@@ -71,6 +73,12 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       BetterPlayerConfiguration(
         autoPlay: true,
         aspectRatio: 16 / 9,
+        controlsConfiguration: BetterPlayerControlsConfiguration(
+          showControlsOnInitialize: false, // 初始化时不显示控件
+          customControlsBuilder: (controller, onControlsVisibilityChanged) {
+            return CustomControls(controller: controller); // 使用自定义控件
+          },
+        ),
         eventListener: (event) {
           if (event.betterPlayerEventType == BetterPlayerEventType.finished) {
             _playNextEpisode();
@@ -79,6 +87,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       ),
       betterPlayerDataSource: betterPlayerDataSource,
     );
+
+
+
 
     // 设置播放器控制器到 VideoState
     videoState.setBetterPlayerController(_betterPlayerController);
@@ -110,6 +121,59 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     super.dispose();
   }
 
+  // 处理双击事件
+  void _onDoubleTap(TapDownDetails details, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final tapPosition = details.localPosition.dx;
+    final isFullScreen = _betterPlayerController?.isFullScreen ?? false;
+
+    if (_betterPlayerController == null) return;
+
+    final currentPosition = _betterPlayerController!.videoPlayerController!.value.position;
+    final videoLength = _betterPlayerController!.videoPlayerController!.value.duration ?? Duration.zero;
+
+    final double thirdOfScreen = isFullScreen ? screenWidth / 3 : screenWidth / 2;
+
+    if (tapPosition < thirdOfScreen) {
+      final rewindPosition = currentPosition - Duration(seconds: 10);
+      _betterPlayerController!.seekTo(rewindPosition > Duration.zero ? rewindPosition : Duration.zero);
+    } else if (tapPosition > (isFullScreen ? 2 * thirdOfScreen : thirdOfScreen)) {
+      final forwardPosition = currentPosition + Duration(seconds: 10);
+      _betterPlayerController!.seekTo(forwardPosition < videoLength ? forwardPosition : videoLength);
+    } else {
+      if (_betterPlayerController!.isPlaying() ?? false) {
+        _betterPlayerController!.pause();
+      } else {
+        _betterPlayerController!.play();
+      }
+    }
+  }
+
+  // 处理拖动事件
+// 处理拖动事件
+void _onHorizontalDragUpdate(DragUpdateDetails details) {
+  if (_betterPlayerController == null) return;
+
+  final isFullScreen = _betterPlayerController?.isFullScreen ?? false;
+  final currentPosition = _betterPlayerController!.videoPlayerController!.value.position;
+  final videoLength = _betterPlayerController!.videoPlayerController!.value.duration ?? Duration.zero;
+
+  // 根据是否全屏设置不同的拖动灵敏度
+  final dragSensitivity = isFullScreen ? 0.5 : 0.5; // 适当调整灵敏度
+
+  // 计算拖动的时间
+  final dragTime = Duration(seconds: (details.primaryDelta! * dragSensitivity).round());
+  final newPosition = currentPosition + dragTime;
+
+  // 更新视频播放位置
+  _betterPlayerController!.seekTo(
+    newPosition > Duration.zero
+      ? (newPosition < videoLength ? newPosition : videoLength)
+      : Duration.zero,
+  );
+}
+
+
   @override
   Widget build(BuildContext context) {
     final videoState = Provider.of<VideoState>(context);
@@ -121,97 +185,101 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             ? const Center(child: CircularProgressIndicator())
             : videoState.hasError
                 ? const Center(child: Text('Error loading video information'))
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: videoState.betterPlayerController != null
-                            ? BetterPlayer(controller: videoState.betterPlayerController!)
-                            : const Center(child: CircularProgressIndicator()),
-                      ),
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: videoInfo != null
-                            ? Text(
-                                videoInfo['title'],
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      const SizedBox(height: 16),
-                      if (videoInfo != null && videoInfo['episodes'] != null)
+                : GestureDetector(
+                    onDoubleTapDown: (details) => _onDoubleTap(details, context),
+                    onHorizontalDragUpdate: _onHorizontalDragUpdate,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: videoState.betterPlayerController != null
+                              ? BetterPlayer(controller: videoState.betterPlayerController!)
+                              : const Center(child: CircularProgressIndicator()),
+                        ),
+                        const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Episodes:',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                              Text(
-                                '正在播放第 ${videoState.currentEpisodeIndex + 1} 集',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      if (videoInfo != null && videoInfo['episodes'] != null)
-                        Expanded(
-                          child: ListView(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            children: videoInfo['episodes'].entries.map<Widget>((entry) {
-                              final lineName = entry.key;
-                              final episodeList = entry.value;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    lineName,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.purple,
-                                    ),
+                          child: videoInfo != null
+                              ? Text(
+                                  videoInfo['title'],
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
                                   ),
-                                  const SizedBox(height: 4),
-                                  ...episodeList.map<Widget>((episode) {
-                                    return Card(
-                                      margin: const EdgeInsets.symmetric(vertical: 4.0),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10.0),
-                                      ),
-                                      elevation: 5.0,
-                                      child: ListTile(
-                                        title: Text(episode['name'] ?? ''),
-                                        trailing: const Icon(Icons.play_circle_fill, color: Colors.deepPurple),
-                                        onTap: () {
-                                          _playEpisode(episode['url']);
-                                        },
-                                      ),
-                                    );
-                                  }).toList(),
-                                ],
-                              );
-                            }).toList(),
-                          ),
+                                )
+                              : const SizedBox.shrink(),
                         ),
-                    ],
+                        const SizedBox(height: 16),
+                        if (videoInfo != null && videoInfo['episodes'] != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Episodes:',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                                Text(
+                                  '正在播放第 ${videoState.currentEpisodeIndex + 1} 集',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                        if (videoInfo != null && videoInfo['episodes'] != null)
+                          Expanded(
+                            child: ListView(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              children: videoInfo['episodes'].entries.map<Widget>((entry) {
+                                final lineName = entry.key;
+                                final episodeList = entry.value;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      lineName,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.purple,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    ...episodeList.map<Widget>((episode) {
+                                      return Card(
+                                        margin: const EdgeInsets.symmetric(vertical: 4.0),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10.0),
+                                        ),
+                                        elevation: 5.0,
+                                        child: ListTile(
+                                          title: Text(episode['name'] ?? ''),
+                                          trailing: const Icon(Icons.play_circle_fill, color: Colors.deepPurple),
+                                          onTap: () {
+                                            _playEpisode(episode['url']);
+                                          },
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
       ),
     );

@@ -15,18 +15,28 @@ class NonePage extends StatefulWidget {
 
 class _NonePageState extends State<NonePage> {
   bool _showAnimation = true;
+  Timer? _animationTimer;
 
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 3), () {
-      setState(() {
-        _showAnimation = false;
-      });
+    _animationTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showAnimation = false;
+        });
+      }
     });
   }
 
-  void _showAnnouncementDialog(BuildContext context, String title, String content, String date) {
+  @override
+  void dispose() {
+    _animationTimer?.cancel();
+    super.dispose();
+  }
+
+  void _showAnnouncementDialog(
+      BuildContext context, String title, String content, String date) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -51,7 +61,7 @@ class _NonePageState extends State<NonePage> {
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.5),
-                offset: Offset(0, 6),
+                offset: const Offset(0, 6),
                 blurRadius: 12,
               ),
             ],
@@ -62,7 +72,7 @@ class _NonePageState extends State<NonePage> {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -80,7 +90,7 @@ class _NonePageState extends State<NonePage> {
               const SizedBox(height: 10),
               Text(
                 content,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   color: Colors.white70,
                   fontFamily: 'Lato',
@@ -93,13 +103,13 @@ class _NonePageState extends State<NonePage> {
                 child: Chip(
                   label: Text(
                     date,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Colors.blueGrey,
                       fontFamily: 'Roboto',
                     ),
                   ),
-                  avatar: Icon(
+                  avatar: const Icon(
                     Icons.calendar_today,
                     color: Colors.blueGrey,
                   ),
@@ -110,7 +120,7 @@ class _NonePageState extends State<NonePage> {
               Align(
                 alignment: Alignment.bottomRight,
                 child: TextButton(
-                  child: Text(
+                  child: const Text(
                     '关闭',
                     style: TextStyle(color: Colors.white),
                   ),
@@ -133,14 +143,11 @@ class _NonePageState extends State<NonePage> {
         children: [
           Positioned.fill(
             child: _showAnimation
-                ? AnimatedBackground()
+                ? const AnimatedBackground()
                 : Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.purpleAccent,
-                          Colors.blue,
-                        ],
+                        colors: [Colors.purpleAccent, Colors.blue],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -158,7 +165,7 @@ class _NonePageState extends State<NonePage> {
               title: Shimmer.fromColors(
                 baseColor: Colors.white,
                 highlightColor: Colors.pinkAccent,
-                child: Text(
+                child: const Text(
                   '公告栏',
                   style: TextStyle(
                     fontSize: 28,
@@ -195,7 +202,7 @@ class _NonePageState extends State<NonePage> {
                 } else if (videoState.hasError) {
                   return Center(
                     child: FadeIn(
-                      child: Text(
+                      child: const Text(
                         '加载公告信息失败',
                         style: TextStyle(color: Colors.redAccent, fontSize: 18),
                       ),
@@ -204,7 +211,7 @@ class _NonePageState extends State<NonePage> {
                 } else if (videoState.announcements.isEmpty) {
                   return Center(
                     child: FadeIn(
-                      child: Text(
+                      child: const Text(
                         '暂无公告',
                         style: TextStyle(color: Colors.white70, fontSize: 18),
                       ),
@@ -212,7 +219,7 @@ class _NonePageState extends State<NonePage> {
                   );
                 } else {
                   return ListView.builder(
-                    padding: EdgeInsets.only(top: 40),
+                    padding: const EdgeInsets.only(top: 40),
                     itemCount: videoState.announcements.length,
                     itemBuilder: (context, index) {
                       final announcement = videoState.announcements[index];
@@ -228,7 +235,8 @@ class _NonePageState extends State<NonePage> {
                           child: AnimatedContainer(
                             duration: const Duration(seconds: 2),
                             curve: Curves.fastOutSlowIn,
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -245,7 +253,7 @@ class _NonePageState extends State<NonePage> {
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.5),
-                                  offset: Offset(0, 6),
+                                  offset: const Offset(0, 6),
                                   blurRadius: 12,
                                 ),
                               ],
@@ -256,7 +264,8 @@ class _NonePageState extends State<NonePage> {
                                   Positioned.fill(
                                     child: Shimmer.fromColors(
                                       baseColor: Colors.white.withOpacity(0.3),
-                                      highlightColor: Colors.white.withOpacity(0.6),
+                                      highlightColor:
+                                          Colors.white.withOpacity(0.6),
                                       child: Align(
                                         alignment: Alignment.topRight,
                                         child: Icon(
@@ -273,7 +282,7 @@ class _NonePageState extends State<NonePage> {
                                     ZoomIn(
                                       child: Text(
                                         announcement['title'],
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
@@ -291,12 +300,12 @@ class _NonePageState extends State<NonePage> {
                                     ),
                                     const SizedBox(height: 10),
                                     FadeIn(
-                                      delay: Duration(milliseconds: 300),
+                                      delay: const Duration(milliseconds: 300),
                                       child: Text(
                                         announcement['content'].length > 40
-                                            ? announcement['content'].substring(0, 40) + '...'
+                                            ? '${announcement['content'].substring(0, 40)}...'
                                             : announcement['content'],
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           color: Colors.white70,
                                           fontFamily: 'Lato',
@@ -308,23 +317,26 @@ class _NonePageState extends State<NonePage> {
                                     Align(
                                       alignment: Alignment.bottomRight,
                                       child: SlideInRight(
-                                        duration: Duration(milliseconds: 800),
+                                        duration:
+                                            const Duration(milliseconds: 800),
                                         curve: Curves.easeInOut,
-                                        delay: Duration(milliseconds: 600),
+                                        delay:
+                                            const Duration(milliseconds: 600),
                                         child: Chip(
                                           label: Text(
                                             announcement['date'],
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 14,
                                               color: Colors.blueGrey,
                                               fontFamily: 'Roboto',
                                             ),
                                           ),
-                                          avatar: Icon(
+                                          avatar: const Icon(
                                             Icons.calendar_today,
                                             color: Colors.blueGrey,
                                           ),
-                                          backgroundColor: Colors.white.withOpacity(0.8),
+                                          backgroundColor:
+                                              Colors.white.withOpacity(0.8),
                                           elevation: 5.0,
                                         ),
                                       ),
@@ -349,18 +361,17 @@ class _NonePageState extends State<NonePage> {
 }
 
 class AnimatedBackground extends StatelessWidget {
+  const AnimatedBackground({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Colors.pinkAccent,
-                  Colors.blueAccent,
-                ],
+                colors: [Colors.pinkAccent, Colors.blueAccent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -376,7 +387,7 @@ class AnimatedBackground extends StatelessWidget {
             width: MediaQuery.of(context).size.width,
             onTapAnimation: true,
             particleColor: Colors.white.withAlpha(150),
-            awayAnimationDuration: Duration(milliseconds: 600),
+            awayAnimationDuration: const Duration(milliseconds: 600),
             maxParticleSize: 8,
             isRandSize: true,
             isRandomColor: true,
