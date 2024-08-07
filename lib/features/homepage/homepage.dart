@@ -1,10 +1,8 @@
-// lib/features/homepage/homepage.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/state/video_state.dart';
-import 'components/carousel_section.dart';
+import 'package:potato/core/state/home_page_state.dart';
+// import 'components/carousel_section.dart'; // 注释掉轮播组件的导入
 import 'components/recommended_section.dart';
 import 'dart:async';
 
@@ -16,50 +14,57 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late PageController _pageController;
-  int _currentPage = 0;
-  late Timer _timer;
+  // late PageController _pageController;
+  // int _currentPage = 0;
+  // late Timer _timer; // 使用 late 关键字表示 _timer 是稍后初始化的
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _currentPage);
-    _startAutoScroll();
+    // _pageController = PageController(initialPage: _currentPage);
+    // _startAutoScroll();
     // 使用 addPostFrameCallback 在当前帧结束后调用
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchData();
     });
-    
+
+    // 初始化 _timer 以避免 LateInitializationError
+    // _timer = Timer(const Duration(seconds: 0), () {});
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    _timer.cancel();
+    // _pageController.dispose();
+    // _timer.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _startAutoScroll() {
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_pageController.hasClients) {
-        if (_currentPage < Provider.of<VideoState>(context, listen: false).carouselVideos.length - 1) {
-          _currentPage++;
-        } else {
-          _currentPage = 0;
-        }
-        _pageController.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
-  }
+  // void _startAutoScroll() {
+  //   _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+  //     if (_pageController.hasClients) {
+  //       if (_currentPage <
+  //           Provider.of<HomePageState>(context, listen: false)
+  //                   .carouselVideos
+  //                   .length -
+  //               1) {
+  //         _currentPage++;
+  //       } else {
+  //         _currentPage = 0;
+  //       }
+  //       _pageController.animateToPage(
+  //         _currentPage,
+  //         duration: const Duration(milliseconds: 300),
+  //         curve: Curves.easeInOut,
+  //       );
+  //     }
+  //   });
+  // }
 
   Future<void> _fetchData() async {
-    await Provider.of<VideoState>(context, listen: false).fetchHomePageData();
+    await Provider.of<HomePageState>(context, listen: false)
+        .fetchHomePageData();
   }
 
   Future<void> _onRefresh() async {
@@ -77,12 +82,13 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[200],
         elevation: 1.0,
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
-            backgroundImage: const NetworkImage('https://api.multiavatar.com/tom.png'),
+            backgroundImage:
+                const NetworkImage('https://api.multiavatar.com/tom.png'),
           ),
         ),
         title: Container(
@@ -94,7 +100,8 @@ class _HomePageState extends State<HomePage> {
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
               filled: true,
               fillColor: Colors.grey[200],
-              contentPadding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.0),
                 borderSide: BorderSide.none,
@@ -110,11 +117,11 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Consumer<VideoState>(
-        builder: (context, videoState, child) {
-          if (videoState.isLoading) {
+      body: Consumer<HomePageState>(
+        builder: (context, HomePageState, child) {
+          if (HomePageState.isLoading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (videoState.hasError) {
+          } else if (HomePageState.hasError) {
             return const Center(child: Text('Error loading data'));
           } else {
             return RefreshIndicator(
@@ -123,12 +130,13 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CarouselSection(
-                      carouselVideos: videoState.carouselVideos,
-                      pageController: _pageController,
-                    ),
-                    const SizedBox(height: 20),
-                    RecommendedSection(recommendedVideos: videoState.recommendedVideos),
+                    // CarouselSection(
+                    //   carouselVideos: HomePageState.carouselVideos,
+                    //   pageController: _pageController,
+                    // ),
+                    // const SizedBox(height: 20),
+                    RecommendedSection(
+                        recommendedVideos: HomePageState.recommendedVideos),
                   ],
                 ),
               ),

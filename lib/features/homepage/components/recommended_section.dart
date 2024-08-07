@@ -11,7 +11,7 @@ class RecommendedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      // 检查 recommendedVideos 是否为空
+    // 检查 recommendedVideos 是否为空
     if (recommendedVideos.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -51,67 +51,7 @@ class RecommendedSection extends StatelessWidget {
                     itemCount: videos.length,
                     itemBuilder: (context, index) {
                       final video = videos[index];
-                      return GestureDetector(
-                        onTap: () {
-                          context.pushNamed('VideoDetail',
-                              pathParameters: {'link': video['link']!});
-                        },
-                        child: Container(
-                          width: 140, // 设置图片容器的宽度
-                          margin: const EdgeInsets.only(right: 8.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(5.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(5.0),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(
-                                    child: Image.network(
-                                      video['image'],
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey[300],
-                                          child: const Center(
-                                            child: Icon(
-                                              Icons.broken_image,
-                                              color: Colors.grey,
-                                              size: 50,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      color: Colors.black54,
-                                      padding: const EdgeInsets.all(4.0),
-                                      child: Text(
-                                        video['title'] ?? 'No Title',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
+                      return RecommendedVideoItem(video: video);
                     },
                   ),
                 ),
@@ -137,5 +77,58 @@ class RecommendedSection extends StatelessWidget {
     }
 
     return groupedVideos;
+  }
+}
+
+class RecommendedVideoItem extends StatelessWidget {
+  final Map<String, dynamic> video;
+
+  const RecommendedVideoItem({Key? key, required this.video}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        context
+            .pushNamed('VideoDetail', pathParameters: {'link': video['link']!});
+      },
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 8.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(5.0),
+          child: Stack(
+            children: [
+              Image.network(
+                video['image'],
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.error, size: 50);
+                },
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: Colors.black54,
+                  padding: const EdgeInsets.all(4.0),
+                  child: Text(
+                    video['title'] ?? 'No Title',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
