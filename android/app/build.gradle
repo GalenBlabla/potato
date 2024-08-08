@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.7.10' // 使用最新的稳定版本
+    ext.kotlin_version = '1.5.31' // 使用最新的稳定版本
     repositories {
         google()
         mavenCentral()
