@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:better_player/better_player.dart';
+import 'package:video_player/video_player.dart';
 
 class VideoPlayerWidget extends StatelessWidget {
-  final BetterPlayerController? controller;
+  final VideoPlayerController? controller;
 
   const VideoPlayerWidget({Key? key, this.controller}) : super(key: key);
 
@@ -10,8 +10,8 @@ class VideoPlayerWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 16 / 9,
-      child: controller != null
-          ? BetterPlayer(controller: controller!)
+      child: controller != null && controller!.value.isInitialized
+          ? VideoPlayer(controller!)
           : const Center(child: CircularProgressIndicator()),
     );
   }

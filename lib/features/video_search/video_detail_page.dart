@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:better_player/better_player.dart';
 import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
 import 'package:potato/core/state/video_detail_state.dart';
 import 'components/video_detail/video_player_widget.dart';
 import 'components/video_detail/episode_list_widget.dart';
 import 'components/video_detail/video_title_widget.dart';
-import 'components/custom_controls.dart';
 
 class VideoDetailPage extends StatefulWidget {
   final String link;
@@ -18,7 +17,7 @@ class VideoDetailPage extends StatefulWidget {
 
 class _VideoDetailPageState extends State<VideoDetailPage>
     with TickerProviderStateMixin {
-  BetterPlayerController? _betterPlayerController;
+  VideoPlayerController? _videoPlayerController;
   TabController? _tabController;
   Map<String, int> _currentEpisodeIndices = {};
 
@@ -87,37 +86,26 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     final videoDetailState =
         Provider.of<VideoDetailState>(context, listen: false);
 
-    _betterPlayerController?.pause();
-    _betterPlayerController?.dispose();
+    _videoPlayerController?.pause();
+    _videoPlayerController?.dispose();
 
     try {
       final videoSource = await videoDetailState.getEpisodeInfo(url);
       final decryptedUrl = await videoDetailState.getDecryptedUrl(videoSource);
-      final betterPlayerDataSource = BetterPlayerDataSource(
-        BetterPlayerDataSourceType.network,
-        decryptedUrl,
-      );
 
-      _betterPlayerController = BetterPlayerController(
-        BetterPlayerConfiguration(
-          autoPlay: true,
-          aspectRatio: 16 / 9,
-          controlsConfiguration: BetterPlayerControlsConfiguration(
-            showControlsOnInitialize: false,
-            customControlsBuilder: (controller, onControlsVisibilityChanged) {
-              return CustomControls(controller: controller);
-            },
-          ),
-          eventListener: (event) {
-            if (event.betterPlayerEventType == BetterPlayerEventType.finished) {
-              _playNextEpisode();
-            }
-          },
-        ),
-        betterPlayerDataSource: betterPlayerDataSource,
-      );
+      _videoPlayerController =
+          VideoPlayerController.networkUrl(Uri.parse(decryptedUrl))
+            ..initialize().then((_) {
+              setState(() {}); // 更新UI，确保播放器显示
+              _videoPlayerController?.play();
+            });
 
-      setState(() {}); // 更新UI，确保播放器显示
+      _videoPlayerController?.addListener(() {
+        if (_videoPlayerController!.value.position ==
+            _videoPlayerController!.value.duration) {
+          _playNextEpisode();
+        }
+      });
     } catch (e) {
       print('Error playing video: $e');
     }
@@ -154,8 +142,8 @@ class _VideoDetailPageState extends State<VideoDetailPage>
   @override
   void dispose() {
     // 先暂停播放器并释放资源
-    _betterPlayerController?.pause();
-    _betterPlayerController?.dispose();
+    _videoPlayerController?.pause();
+    _videoPlayerController?.dispose();
 
     _tabController?.dispose();
 
@@ -177,7 +165,7 @@ class _VideoDetailPageState extends State<VideoDetailPage>
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      VideoPlayerWidget(controller: _betterPlayerController),
+                      VideoPlayerWidget(controller: _videoPlayerController),
                       const SizedBox(height: 16),
                       VideoTitleWidget(title: videoInfo?['title']),
                       const SizedBox(height: 8),
