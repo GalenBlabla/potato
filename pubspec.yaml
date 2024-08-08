@@ -14,8 +14,8 @@ dependencies:
   encrypt: ^5.0.0
   flutter_html: ^3.0.0-beta.2
   webview_flutter: ^4.8.0
-  video_player: ^2.3.0
   better_player: ^0.0.84
+  video_player: ^2.9.1
   go_router: ^13.2.0
   provider: ^6.1.2
   cupertino_icons: ^1.0.6
