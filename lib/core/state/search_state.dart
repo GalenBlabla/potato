@@ -15,15 +15,16 @@ class SearchState extends ChangeNotifier {
   bool get isSearching => _isSearching;
 
   /// 搜索视频
-  Future<void> searchVideos(String query, {bool forceRefresh = false}) async {
+  Future<void> searchVideos(
+    String query,
+  ) async {
     _isLoading = true;
     _hasError = false;
     _isSearching = true;
     notifyListeners();
 
     try {
-      _searchResults = await _videoApiService.searchVideos(query,
-          forceRefresh: forceRefresh);
+      _searchResults = await _videoApiService.searchVideos(query);
     } catch (error) {
       _hasError = true;
       _searchResults = [];

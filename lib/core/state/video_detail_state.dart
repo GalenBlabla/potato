@@ -17,14 +17,15 @@ class VideoDetailState extends ChangeNotifier {
   VideoPlayerController? get videoPlayerController => _videoPlayerController;
 
   /// 获取视频详细信息
-  Future<void> fetchVideoInfo(String link, {bool forceRefresh = false}) async {
+  Future<void> fetchVideoInfo(
+    String link,
+  ) async {
     _isLoading = true;
     _hasError = false;
     notifyListeners();
 
     try {
-      _videoInfo = await _videoApiService.fetchVideoInfo(link,
-          forceRefresh: forceRefresh);
+      _videoInfo = await _videoApiService.fetchVideoInfo(link);
     } catch (error) {
       _hasError = true;
       _videoInfo = null;

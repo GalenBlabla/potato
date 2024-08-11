@@ -15,16 +15,15 @@ class HomePageState extends ChangeNotifier {
   bool get hasError => _hasError;
 
   /// 获取主页数据（轮播视频和推荐视频）
-  Future<void> fetchHomePageData({bool forceRefresh = false}) async {
+  Future<void> fetchHomePageData() async {
     _isLoading = true;
     _hasError = false;
     notifyListeners();
 
     try {
       _carouselVideos =
-          await _videoApiService.getCarouselVideos(forceRefresh: forceRefresh);
-      _recommendedVideos = await _videoApiService.getRecommendedVideos(
-          forceRefresh: forceRefresh);
+          await _videoApiService.getCarouselVideos();
+      _recommendedVideos = await _videoApiService.getRecommendedVideos();
     } catch (error) {
       _hasError = true;
       _carouselVideos = [];

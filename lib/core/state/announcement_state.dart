@@ -13,14 +13,14 @@ class AnnouncementState extends ChangeNotifier {
   bool get hasError => _hasError;
 
   /// 获取公告信息
-  Future<void> fetchAnnouncements({bool forceRefresh = false}) async {
+  Future<void> fetchAnnouncements() async {
     _isLoading = true;
     _hasError = false;
     notifyListeners();
 
     try {
       _announcements =
-          await _videoApiService.fetchAnnouncements(forceRefresh: forceRefresh);
+          await _videoApiService.fetchAnnouncements();
     } catch (error) {
       _hasError = true;
       _announcements = [];
