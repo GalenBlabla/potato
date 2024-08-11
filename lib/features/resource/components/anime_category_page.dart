@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:potato/core/state/category_video_state.dart';
 import 'package:go_router/go_router.dart';
+import 'package:potato/core/state/category_video_state.dart';
 
 /// 动漫分类页面组件，支持无限滚动加载视频列表
 class AnimeCategoryPage extends StatefulWidget {
@@ -33,11 +33,11 @@ class _AnimeCategoryPageState extends State<AnimeCategoryPage> {
 
   void _fetchInitialData() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CategoryVideoState>().fetchCategoryVideos(
-            context
-                .read<CategoryVideoState>()
-                .getCategoryUrlByIndex(widget.categoryIndex),
-          );
+      final categoryVideoState = context.read<CategoryVideoState>();
+      categoryVideoState.fetchCategoryVideos(
+        widget.categoryIndex,
+        categoryVideoState.getCategoryUrlByIndex(widget.categoryIndex),
+      );
     });
   }
 
@@ -48,6 +48,7 @@ class _AnimeCategoryPageState extends State<AnimeCategoryPage> {
       if (!categoryVideoState.isLoadingCategory &&
           categoryVideoState.hasMoreVideos) {
         categoryVideoState.loadMoreVideos(
+          widget.categoryIndex,
           categoryVideoState.getCategoryUrlByIndex(widget.categoryIndex),
         );
       }
@@ -64,8 +65,10 @@ class _AnimeCategoryPageState extends State<AnimeCategoryPage> {
   Widget build(BuildContext context) {
     return Consumer<CategoryVideoState>(
       builder: (context, categoryVideoState, child) {
-        final videos =
-            categoryVideoState.getCategoryVideosByIndex(widget.categoryIndex);
+        final videos = categoryVideoState.getCategoryVideos(
+          widget.categoryIndex,
+          categoryVideoState.selectedYear,
+        );
 
         if (categoryVideoState.isLoadingCategory && videos.isEmpty) {
           return const Center(child: CircularProgressIndicator());
@@ -108,8 +111,8 @@ class _AnimeCategoryPageState extends State<AnimeCategoryPage> {
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            width: 100,
-                            height: 150,
+                            width: 80,
+                            height: 110,
                             color: Colors.grey[300],
                             child: const Center(
                               child: Icon(

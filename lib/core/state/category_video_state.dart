@@ -3,35 +3,36 @@ import 'package:potato/data/api/video_api_service.dart';
 
 class CategoryVideoState extends ChangeNotifier {
   final VideoApiService _videoApiService = VideoApiService();
+  final Map<int, Map<int, List<Map<String, dynamic>>>> _categoryVideosCache =
+      {}; // 多层缓存
   bool _isLoadingCategory = false;
-  int _selectedYear = 0; // 默认选择2023年
-  int _currentPage = 1; // 当前页码
   bool _hasMoreVideos = true; // 是否有更多视频
+  int _currentPage = 1; // 当前页码
+  int _selectedYear = 0; // 默认选择全部年份（0 表示全部）
 
-  List<Map<String, dynamic>> _categoryVideos = [];
-
-  List<Map<String, dynamic>> get categoryVideos => _categoryVideos;
-  bool get isLoadingCategory => _isLoadingCategory;
+  // 获取当前的年份
   int get selectedYear => _selectedYear;
   int get currentPage => _currentPage;
+  bool get isLoadingCategory => _isLoadingCategory;
   bool get hasMoreVideos => _hasMoreVideos;
 
+  // 设置选中的年份
   void setSelectedYear(int year) {
     _selectedYear = year;
     _currentPage = 1; // 重置页码
     _hasMoreVideos = true; // 重置更多视频标志
-    _categoryVideos.clear(); // 清空当前视频列表
-    print("Year set to: $_selectedYear, clearing videos and resetting page");
     notifyListeners();
   }
 
-  /// 获取指定分类的视频
-  Future<void> fetchCategoryVideos(
-    String categoryUrl,
-  ) async {
+  // 获取指定 Tab 和年份的缓存视频数据
+  List<Map<String, dynamic>> getCategoryVideos(int tabIndex, int year) {
+    return _categoryVideosCache[tabIndex]?[year] ?? [];
+  }
+
+  // 获取指定 Tab 和年份的视频
+  Future<void> fetchCategoryVideos(int tabIndex, String categoryUrl) async {
     if (_isLoadingCategory) return; // 防止重复请求
     _isLoadingCategory = true;
-    print("Loading videos for URL: $categoryUrl, page: $_currentPage");
     notifyListeners();
 
     // 生成特定年份和页码的 URL
@@ -39,56 +40,37 @@ class CategoryVideoState extends ChangeNotifier {
     final pageSuffix = _currentPage == 1 ? '' : '$_currentPage';
     final fullUrl = '${categoryUrl}--------${pageSuffix}---${yearSuffix}.html';
 
-    print("Fetching category videos for $fullUrl");
     try {
       final videos = await _videoApiService.getCategoryVideos(fullUrl);
-      print("Fetched ${videos.length} videos");
 
-      // 追加新数据到当前列表
+      // 缓存数据到对应的 Tab 和年份中
+      _categoryVideosCache.putIfAbsent(tabIndex, () => {});
+      _categoryVideosCache[tabIndex]?.putIfAbsent(_selectedYear, () => []);
       if (_currentPage == 1) {
-        _categoryVideos = videos;
-        print("Setting videos: ${_categoryVideos.length} items");
+        _categoryVideosCache[tabIndex]?[_selectedYear] = videos;
       } else {
-        _categoryVideos.addAll(videos);
-        print("Adding more videos: total now ${_categoryVideos.length} items");
+        _categoryVideosCache[tabIndex]?[_selectedYear]?.addAll(videos);
       }
 
-      _hasMoreVideos = videos.isNotEmpty; // 检查是否还有更多视频
-      print("Has more videos: $_hasMoreVideos");
+      _hasMoreVideos = videos.isNotEmpty;
     } catch (error) {
       if (_currentPage == 1) {
-        _categoryVideos = [];
+        _categoryVideosCache[tabIndex]?[_selectedYear] = [];
       }
-      print("Error fetching videos: $error");
     } finally {
       _isLoadingCategory = false;
-      print("Finished loading videos, notify listeners");
-      notifyListeners(); // 只在数据有更新时通知监听器
+      notifyListeners();
     }
   }
 
-  /// 加载更多视频
-  Future<void> loadMoreVideos(String categoryUrl) async {
+  // 加载更多视频
+  Future<void> loadMoreVideos(int tabIndex, String categoryUrl) async {
     if (_isLoadingCategory || !_hasMoreVideos) return;
     _currentPage++;
-    print("Loading more videos, new page: $_currentPage");
-    await fetchCategoryVideos(categoryUrl);
+    await fetchCategoryVideos(tabIndex, categoryUrl);
   }
 
-  /// 加载上一页视频
-  Future<void> loadPreviousVideos(String categoryUrl) async {
-    if (_isLoadingCategory || _currentPage <= 1) return;
-    _currentPage--;
-    print("Loading previous page: $_currentPage");
-    await fetchCategoryVideos(categoryUrl);
-  }
-
-  /// 根据索引获取分类视频
-  List<Map<String, dynamic>> getCategoryVideosByIndex(int index) {
-    return _categoryVideos; // 直接返回当前视频列表
-  }
-
-  /// 根据索引获取分类URL
+  // 根据索引获取分类 URL
   String getCategoryUrlByIndex(int index) {
     const List<String> categoryUrls = [
       '/show/ribendongman',
@@ -96,8 +78,6 @@ class CategoryVideoState extends ChangeNotifier {
       '/show/omeidongman',
       '/show/dongmandianying',
     ];
-    final categoryUrl = categoryUrls[index];
-    print("Category URL for index $index: $categoryUrl");
-    return categoryUrl;
+    return categoryUrls[index];
   }
 }

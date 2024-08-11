@@ -37,7 +37,6 @@ class _BrowseResourcesPageState extends State<BrowseResourcesPage>
 
     // 添加 Tab 切换监听器，当切换到新标签时加载对应数据
     _tabController.addListener(() {
-      // 确保只在切换完成时加载数据
       if (!_tabController.indexIsChanging) {
         _loadCategoryData(_tabController.index, forceRefresh: false);
       }
@@ -52,38 +51,17 @@ class _BrowseResourcesPageState extends State<BrowseResourcesPage>
   }
 
   /// 根据索引加载对应类别的数据
-  /// @param index 类别索引
-  /// @param forceRefresh 是否强制刷新数据，默认不刷新
   void _loadCategoryData(int index, {bool forceRefresh = false}) {
     final categoryUrl = _categoryUrls[index]; // 获取对应类别的 URL
     Provider.of<CategoryVideoState>(context, listen: false)
-        .fetchCategoryVideos(categoryUrl); // 加载数据
+        .fetchCategoryVideos(index, categoryUrl); // 加载数据
   }
 
   /// 当用户选择了年份时调用此方法，根据年份筛选数据
-  /// @param year 用户选择的年份
   void _onYearSelected(int year) {
     Provider.of<CategoryVideoState>(context, listen: false)
         .setSelectedYear(year); // 设置选中的年份
     _loadCategoryData(_tabController.index, forceRefresh: true); // 刷新当前类别数据
-  }
-
-  /// 加载更多数据，用于分页加载
-  /// @param index 当前类别的索引
-  void _loadMore(int index) {
-    print("_categoryUrls$_categoryUrls");
-    final categoryUrl = _categoryUrls[index];
-    print("categoryUrl$categoryUrl");
-    Provider.of<CategoryVideoState>(context, listen: false)
-        .loadMoreVideos(categoryUrl); // 加载更多视频数据
-  }
-
-  /// 加载上一页数据，用于分页加载
-  /// @param index 当前类别的索引
-  void _loadPrevious(int index) {
-    final categoryUrl = _categoryUrls[index];
-    Provider.of<CategoryVideoState>(context, listen: false)
-        .loadPreviousVideos(categoryUrl); // 加载上一页视频数据
   }
 
   @override
@@ -118,8 +96,6 @@ class _BrowseResourcesPageState extends State<BrowseResourcesPage>
                 children: List.generate(_categoryUrls.length, (index) {
                   return AnimeCategoryPage(
                     categoryIndex: index, // 当前类别索引
-                    // onLoadMore: () => _loadMore(index), // 加载更多数据的回调
-                    // onLoadPrevious: () => _loadPrevious(index), // 加载上一页数据的回调
                   );
                 }),
               ),

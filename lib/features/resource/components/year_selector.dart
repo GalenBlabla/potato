@@ -24,7 +24,7 @@ class _YearSelectorState extends State<YearSelector> {
     ];
 
     return Container(
-      height: 40, // 减小垂直占用高度
+      height: 50, // 减小垂直占用高度
       color: Colors.grey[200], // 浅灰色背景
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -44,8 +44,8 @@ class _YearSelectorState extends State<YearSelector> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              margin: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              margin: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Text(
                 yearText,
                 style: TextStyle(
