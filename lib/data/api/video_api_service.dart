@@ -5,7 +5,7 @@ import 'dart:io';
 import 'cache_manager.dart'; // 导入缓存管理器
 
 class VideoApiService {
-  final String baseUrl = "http://192.168.28.79:8001";
+  final String baseUrl = "http://192.168.28.147:8000";
   final CacheManager _cacheManager = CacheManager();
   final String targetUrl = "https://www.dmla7.com";
 
