@@ -19,7 +19,7 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     with TickerProviderStateMixin {
   FijkPlayer? _fijkPlayer;
   TabController? _tabController;
-  final Map<String, int> _currentEpisodeIndices = {};
+  Map<String, int> _currentEpisodeIndices = {};
 
   @override
   void initState() {
@@ -87,9 +87,10 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     final videoDetailState =
         Provider.of<VideoDetailState>(context, listen: false);
 
-    _fijkPlayer?.reset();
+   
 
     try {
+      await _fijkPlayer?.reset();
       final videoSource = await videoDetailState.getEpisodeInfo(url);
       final decryptedUrl = await videoDetailState.getDecryptedUrl(videoSource);
 
@@ -110,6 +111,7 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     // 播放选中的集数
     final videoDetailState =
         Provider.of<VideoDetailState>(context, listen: false);
+        print(videoDetailState);
     final episodes = videoDetailState.videoInfo!['episodes'];
     final episode = episodes[lineName][episodeIndex];
     final url = episode['url'];
