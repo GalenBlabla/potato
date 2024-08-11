@@ -1,4 +1,3 @@
-// lib/features/video_search/video_search_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:potato/core/state/search_state.dart';
@@ -120,6 +119,21 @@ class _VideoSearchPageState extends State<VideoSearchPage> {
                                           width: 100,
                                           height: 150,
                                           fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Container(
+                                              width: 100,
+                                              height: 150,
+                                              color: Colors.grey[300],
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.broken_image,
+                                                  color: Colors.grey,
+                                                  size: 50,
+                                                ),
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ),
                                       const SizedBox(width: 16),
