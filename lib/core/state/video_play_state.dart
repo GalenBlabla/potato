@@ -1,4 +1,3 @@
-// states/video_play_state.dart
 import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
 
@@ -7,6 +6,7 @@ class VideoPlayState extends ChangeNotifier {
 
   FijkPlayer get fijkPlayer => _fijkPlayer;
 
+  /// 设置视频源并自动播放
   Future<void> setVideoSource(String url, {bool autoPlay = true}) async {
     try {
       await _fijkPlayer.setDataSource(url, autoPlay: autoPlay);
@@ -14,6 +14,11 @@ class VideoPlayState extends ChangeNotifier {
     } catch (e) {
       print('Error setting video source: $e');
     }
+  }
+
+  /// 播放指定的集
+  Future<void> playEpisode(String url) async {
+    await setVideoSource(url, autoPlay: true);
   }
 
   void releasePlayer() {

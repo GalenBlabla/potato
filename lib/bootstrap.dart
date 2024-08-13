@@ -1,5 +1,6 @@
 // lib/bootstrap.dart
 import 'package:flutter/material.dart';
+import 'package:potato/core/state/video_play_state.dart';
 import 'package:provider/provider.dart';
 import 'app/app.dart';
 import 'core/state/category_video_state.dart';
@@ -21,6 +22,7 @@ Future<void> bootstrap() async {
         ChangeNotifierProvider(create: (_) => HomePageState()),
         ChangeNotifierProvider(create: (_) => SearchState()),
         ChangeNotifierProvider(create: (_) => AnnouncementState()),
+        ChangeNotifierProvider(create: (_)=> VideoPlayState()),
       ],
       child: const App(),
     ),

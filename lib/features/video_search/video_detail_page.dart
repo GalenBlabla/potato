@@ -22,6 +22,7 @@ class _VideoDetailPageState extends State<VideoDetailPage>
   FijkPlayer? _fijkPlayer; // FijkPlayer播放器实例
   TabController? _tabController; // TabController 用于管理 TabBar 和 TabBarView 的联动
   final Map<String, int> _currentEpisodeIndices = {}; // 保存每个剧集行当前播放的集数索引
+  bool _isFullScreen = false; // 标识当前是否为全屏模式
 
   @override
   void initState() {
@@ -74,6 +75,12 @@ class _VideoDetailPageState extends State<VideoDetailPage>
 
     // 创建 FijkPlayer 实例
     _fijkPlayer = FijkPlayer();
+    // 设置全屏事件监听
+    _fijkPlayer?.setOption(FijkOption.hostCategory, "request-screen-on", 1);
+    _fijkPlayer?.setOption(FijkOption.hostCategory, "request-audio-focus", 1);
+
+    _fijkPlayer?.addListener(_onPlayerStateChanged);
+
     // 播放第一个剧集
     _playEpisodeAtIndex(0);
   }
@@ -120,6 +127,53 @@ class _VideoDetailPageState extends State<VideoDetailPage>
       if (kDebugMode) {
         print('Error playing video: $e'); // 打印错误信息
       }
+      _showErrorDialog("播放视频时出错，请稍后再试。");
+    }
+  }
+
+  /// 处理播放器状态变化的事件
+  void _onPlayerStateChanged() {
+    if (_fijkPlayer != null && _fijkPlayer!.state == FijkState.completed) {
+      _playNextEpisode();
+    }
+  }
+
+  /// 播放下一集
+  void _playNextEpisode() {
+    final videoDetailState =
+        Provider.of<VideoDetailState>(context, listen: false);
+    final currentIndex = videoDetailState.currentEpisodeIndex;
+    if (currentIndex + 1 < videoDetailState.videoInfo!['episodes'].length) {
+      _playEpisodeAtIndex(currentIndex + 1);
+    }
+  }
+
+  /// 显示错误提示对话框
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('错误'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('确定'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 切换全屏模式
+  void _toggleFullScreen() {
+    setState(() {
+      _isFullScreen = !_isFullScreen;
+    });
+    if (_isFullScreen) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
   }
 
@@ -143,6 +197,7 @@ class _VideoDetailPageState extends State<VideoDetailPage>
   @override
   void dispose() {
     // 释放播放器资源
+    _fijkPlayer?.removeListener(_onPlayerStateChanged);
     _fijkPlayer?.release();
     // 释放 TabController 资源
     _tabController?.dispose();
@@ -152,6 +207,8 @@ class _VideoDetailPageState extends State<VideoDetailPage>
     super.dispose();
   }
 
+
+  
   @override
   Widget build(BuildContext context) {
     final videoDetailState = Provider.of<VideoDetailState>(context);
@@ -159,8 +216,8 @@ class _VideoDetailPageState extends State<VideoDetailPage>
 
     return Scaffold(
       body: SafeArea(
-        child: videoDetailState.isLoading
-            ? const Center(child: CircularProgressIndicator()) // 显示加载中的进度条
+        child: 
+        videoDetailState.isLoading? const Center(child: CircularProgressIndicator()) // 显示加载中的进度条
             : videoDetailState.hasError || videoInfo == null
                 ? const Center(
                     child: Text('Error loading video information')) // 显示加载错误信息
