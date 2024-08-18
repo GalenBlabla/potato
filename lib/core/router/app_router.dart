@@ -1,9 +1,8 @@
 // lib/core/router/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-// import 'package:potato/features/homepage/homepage.dart';
 import 'package:potato/features/video_search/video_search_page.dart';
-import 'package:potato/features/video_search/video_detail_page.dart';
+import 'package:potato/features/video_play_page/video_detail_page.dart';
 import 'package:potato/navigation/main_navigation.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
