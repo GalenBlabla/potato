@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 class VideoApiService {
-  final String baseUrl = "http://192.168.28.147:8000";
+  final String baseUrl = "https://potato.galen.life";
   final String targetUrl = "https://www.dmla7.com";
 
   Future<T> fetchData<T>(
