@@ -8,11 +8,10 @@ import 'core/state/video_detail_state.dart';
 import 'core/state/home_page_state.dart';
 import 'core/state/search_state.dart';
 import 'core/state/announcement_state.dart';
-import 'data/api/cache_manager.dart';
+
 
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await CacheManager().init(); // 初始化缓存管理器
 
   runApp(
     MultiProvider(
